@@ -1,0 +1,63 @@
+public with sharing class GuestReviewProcessor {
+
+    @InvocableMethod(
+        label='Process Guest Reviews' 
+        description='Creates Guest Review records from the provided Contact, Experience, Rating, and Review details'
+    )
+    public static List<GuestReviewResponse> processReviews(List<GuestReviewRequest> requests) {
+        List<GuestReviewResponse> responses = new List<GuestReviewResponse>();
+        
+        for (GuestReviewRequest req : requests) {
+            GuestReviewResponse response = new GuestReviewResponse();
+            try {
+                Guest_Review__c reviewRecord = new Guest_Review__c();
+                reviewRecord.Contact__c = req.contact.Id;
+                reviewRecord.Experience__c = req.experience.Id;
+                reviewRecord.Comments__c = req.review;
+                reviewRecord.Rating__c = req.rating;
+                insert reviewRecord;
+
+                response.message = 'Guest Review created successfully with Id: ' + reviewRecord.Id;
+            } catch (Exception e) {
+                response.message = 'Failed to create Guest Review. Error: ' + e.getMessage();
+            }
+            responses.add(response);
+        }
+        
+        return responses;
+    }
+
+    public class GuestReviewRequest {
+        @InvocableVariable(
+            required=true 
+            description='The Contact associated with the guest review'
+        )
+        public Contact contact;
+
+        @InvocableVariable(
+            required=true 
+            description='The Experience record associated with the guest review'
+        )
+        public Experience__c experience;
+
+        @InvocableVariable(
+            required=true 
+            description='The review comments provided by the guest'
+        )
+        public String review;
+
+        @InvocableVariable(
+            required=true 
+            description='The rating provided by the guest'
+        )
+        public String rating;
+    }
+
+    public class GuestReviewResponse {
+        @InvocableVariable(
+            label='Status' 
+            description='Indicates whether the Guest Review was created successfully or failed'
+        )
+        public String message;
+    }
+}
